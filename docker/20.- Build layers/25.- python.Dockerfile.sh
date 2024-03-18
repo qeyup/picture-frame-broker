@@ -4,7 +4,8 @@ set -e
 
 # Upgrade system
 PACKAGES=()
-PACKAGES+=(d2dcn)
+PACKAGES+=(d2dcn==0.3.1)
+PACKAGES+=(opencv-python=4.9.0.80)
 
 
 # Install all
