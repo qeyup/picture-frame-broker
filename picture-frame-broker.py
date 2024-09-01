@@ -29,7 +29,7 @@ import pathlib
 import cv2
 import threading
 
-version = "0.1.0"
+version = "0.2.0"
 
 class pictureBroker():
 
@@ -43,7 +43,7 @@ class pictureBroker():
         AVALILABLE_H_FOLDER = "available_h_folders"
         AVALILABLE_v_FOLDER = "available_v_folders"
         CONNECTED_H_FRAMES = "connected_h_frames"
-        CONNECTED_v_FRAMES = "connected_v_frames"
+        CONNECTED_V_FRAMES = "connected_v_frames"
 
     class param:
         GET_IMAGE_TIMEOUT = 30
@@ -184,9 +184,10 @@ class pictureBroker():
                 return None
 
             if v_orientation:
-                self.d2d.publishInfo(pictureBroker.field.CONNECTED_v_FRAMES, len(used_current_id_files), d2dcn.d2dConstants.category.GENERIC)
+                self.connected_v_frames.value = len(used_current_id_files)
+
             else:
-                self.d2d.publishInfo(pictureBroker.field.CONNECTED_H_FRAMES, len(used_current_id_files), d2dcn.d2dConstants.category.GENERIC)
+                self.connected_h_frames.value = len(used_current_id_files)
 
 
         # Get image
@@ -209,32 +210,28 @@ class pictureBroker():
 
     def configCommands(self):
 
-        response = {}
-        response[pictureBroker.field.IMAGE_PATH] = {}
-        response[pictureBroker.field.IMAGE_PATH][d2dcn.d2dConstants.infoField.TYPE] = d2dcn.d2dConstants.valueTypes.STRING
-        response[pictureBroker.field.IMAGE] = {}
-        response[pictureBroker.field.IMAGE][d2dcn.d2dConstants.infoField.TYPE] = d2dcn.d2dConstants.valueTypes.STRING
+        response = d2dcn.commandArgsDef()
+        response.add(pictureBroker.field.IMAGE_PATH, d2dcn.constants.valueTypes.STRING)
+        response.add(pictureBroker.field.IMAGE, d2dcn.constants.valueTypes.STRING)
 
-        request = {}
-        request[pictureBroker.field.ID] = {}
-        request[pictureBroker.field.ID][d2dcn.d2dConstants.infoField.TYPE] = d2dcn.d2dConstants.valueTypes.STRING
-        request[pictureBroker.field.VERTICAL_ORIENTATION] = {}
-        request[pictureBroker.field.VERTICAL_ORIENTATION][d2dcn.d2dConstants.infoField.TYPE] = d2dcn.d2dConstants.valueTypes.BOOL
+        request = d2dcn.commandArgsDef()
+        request.add(pictureBroker.field.ID, d2dcn.constants.valueTypes.STRING)
+        request.add(pictureBroker.field.VERTICAL_ORIENTATION, d2dcn.constants.valueTypes.BOOL)
 
         self.d2d.addServiceCommand(lambda args : self.sendPicture(args),
                                     pictureBroker.command.GET_IMAGE,
-                                    request, response, d2dcn.d2dConstants.category.GENERIC,
+                                    request, response, d2dcn.constants.category.GENERIC,
                                     timeout=pictureBroker.param.GET_IMAGE_TIMEOUT,
-                                    protocol=d2dcn.d2dConstants.commandProtocol.JSON_TCP)
+                                    protocol=d2dcn.constants.commandProtocol.JSON_TCP)
+
+
+        self.connected_v_frames = self.d2d.addInfoWriter(pictureBroker.field.CONNECTED_V_FRAMES, d2dcn.constants.valueTypes.INT, d2dcn.constants.category.GENERIC)
+        self.connected_h_frames = self.d2d.addInfoWriter(pictureBroker.field.CONNECTED_H_FRAMES, d2dcn.constants.valueTypes.INT, d2dcn.constants.category.GENERIC)
+        self.avalilable_v_folder = self.d2d.addInfoWriter(pictureBroker.field.AVALILABLE_v_FOLDER, d2dcn.constants.valueTypes.INT, d2dcn.constants.category.GENERIC)
+        self.avalilable_h_folder = self.d2d.addInfoWriter(pictureBroker.field.AVALILABLE_H_FOLDER, d2dcn.constants.valueTypes.INT, d2dcn.constants.category.GENERIC)
 
 
     def startBroker(self):
-
-
-        self.d2d.publishInfo(pictureBroker.field.CONNECTED_v_FRAMES, 0, d2dcn.d2dConstants.category.GENERIC)
-        self.d2d.publishInfo(pictureBroker.field.CONNECTED_H_FRAMES, 0, d2dcn.d2dConstants.category.GENERIC)
-        self.d2d.publishInfo(pictureBroker.field.AVALILABLE_v_FOLDER, 0, d2dcn.d2dConstants.category.GENERIC)
-        self.d2d.publishInfo(pictureBroker.field.AVALILABLE_H_FOLDER, 0, d2dcn.d2dConstants.category.GENERIC)
 
 
         while True:
@@ -258,11 +255,11 @@ class pictureBroker():
                     with self.__mutex:
                         if current_v_length == 0 and len(v_images_files) > 0:
                             self.__available_v_images_folder.append(v_images_files)
-                            self.d2d.publishInfo(pictureBroker.field.AVALILABLE_v_FOLDER, len(self.__available_v_images_folder), d2dcn.d2dConstants.category.GENERIC)
+                            self.avalilable_v_folder.value = len(self.__available_v_images_folder)
 
                         if current_h_length == 0 and len(h_images_files) > 0:
                             self.__available_h_images_folder.append(h_images_files)
-                            self.d2d.publishInfo(pictureBroker.field.AVALILABLE_H_FOLDER, len(self.__available_h_images_folder), d2dcn.d2dConstants.category.GENERIC)
+                            self.avalilable_h_folder.value = len(self.__available_h_images_folder)
 
             time.sleep(1)
 
