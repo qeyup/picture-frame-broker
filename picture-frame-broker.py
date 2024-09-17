@@ -29,7 +29,7 @@ import pathlib
 import cv2
 import threading
 
-version = "0.2.0"
+version = "0.2.1"
 
 class pictureBroker():
 
@@ -254,11 +254,11 @@ class pictureBroker():
 
                     with self.__mutex:
                         if current_v_length == 0 and len(v_images_files) > 0:
-                            self.__available_v_images_folder.append(v_images_files)
+                            self.__available_v_images_folder.append(list(v_images_files))
                             self.avalilable_v_folder.value = len(self.__available_v_images_folder)
 
                         if current_h_length == 0 and len(h_images_files) > 0:
-                            self.__available_h_images_folder.append(h_images_files)
+                            self.__available_h_images_folder.append(list(h_images_files))
                             self.avalilable_h_folder.value = len(self.__available_h_images_folder)
 
             time.sleep(1)
